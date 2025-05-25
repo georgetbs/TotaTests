@@ -6,10 +6,13 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
+const StyledSafeAreaView = styled(SafeAreaView);
 
 export default function Index() {
   const { t } = useTranslation();
@@ -27,20 +30,22 @@ export default function Index() {
   }, []);
 
   return (
-    <StyledView className="flex-1 bg-white">
-      <Header />
-      <StyledView className="flex-1 px-4 py-20 items-center">
-        <StyledText className="text-3xl mb-8">{t('welcome')}</StyledText>
-        <StyledView className="space-y-4">
-          <StyledTouchableOpacity onPress={() => router.push('/TestScreen?mode=exam')} className="p-4 border-2 border-red-500">
-            <StyledText className="text-xl text-center">{t('start_exam')}</StyledText>
-          </StyledTouchableOpacity>
-          <StyledTouchableOpacity onPress={() => router.push('/TestScreen?mode=study')} className="p-4 border-2 border-red-500">
-            <StyledText className="text-xl text-center">{t('study_mode')}</StyledText>
-          </StyledTouchableOpacity>
+    <StyledSafeAreaView className="flex-1 bg-white">
+      <StyledView className="flex-1 bg-white">
+        <Header />
+        <StyledView className="flex-1 px-4 py-20 items-center">
+          <StyledText className="text-3xl mb-8">{t('welcome')}</StyledText>
+          <StyledView className="space-y-4">
+            <StyledTouchableOpacity onPress={() => router.push('/TestScreen?mode=exam')} className="p-4 border-2 border-red-500">
+              <StyledText className="text-xl text-center">{t('start_exam')}</StyledText>
+            </StyledTouchableOpacity>
+            <StyledTouchableOpacity onPress={() => router.push('/TestScreen?mode=study')} className="p-4 border-2 border-red-500">
+              <StyledText className="text-xl text-center">{t('study_mode')}</StyledText>
+            </StyledTouchableOpacity>
+          </StyledView>
         </StyledView>
+        <Footer />
       </StyledView>
-      <Footer />
-    </StyledView>
+    </StyledSafeAreaView>
   );
 }

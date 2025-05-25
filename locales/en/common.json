@@ -44,5 +44,11 @@
   "show_correct_answers": "Show Correct Answers",
   "show_incorrect_answers": "Show Incorrect Answers",
   "welcome": "TotaTests - Citizenship Tests of Georgia!",
-  "study_mode": "Study Mode"
+  "study_mode": "Study Mode",
+  "main_menu": "Main Menu",
+  "share": "Share",
+  "app_link": "https://tota.ge/totatests/",
+  "show_all_answers": "Show All Answers",
+  "correct_answers": "Correct Answers",
+  "incorrect_answers": "Incorrect Answers"
 }

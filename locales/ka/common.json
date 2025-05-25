@@ -44,5 +44,11 @@
   "show_correct_answers": "სწორი პასუხების ჩვენება",
   "show_incorrect_answers": "არასწორი პასუხების ჩვენება",
   "welcome": "TotaTests - საქართველოს მოქალაქეობის ტესტები!",
-  "study_mode": "სასწავლო რეჟიმი"
+  "study_mode": "სასწავლო რეჟიმი",
+  "share": "გაზიარება",
+  "app_link": "https://tota.ge/totatests/",
+  "show_all_answers": "აჩვენეთ ყველა პასუხი",
+  "correct_answers": "სწორი პასუხები",
+  "incorrect_answers": "არასწორი პასუხები",
+  "main_menu":"მთავარი მენიუ"
 }

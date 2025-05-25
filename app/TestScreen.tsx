@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, TextInput, Image, Share } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { styled } from 'nativewind';
 import Modal from '../components/Modal';
 import Question from './Question';
 import { Question as QuestionType } from './types';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Directly import JSON files
 import languageData from '../data/language.json';
@@ -22,6 +23,7 @@ const StyledCheckbox = styled(TouchableOpacity);
 const StyledRadio = styled(TouchableOpacity);
 const StyledTextInput = styled(TextInput);
 const StyledSafeAreaView = styled(SafeAreaView);
+const StyledImage = styled(Image);
 
 export default function TestScreen({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation();
@@ -57,6 +59,7 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
   const [showHints, setShowHints] = useState<boolean>(true);
   const [showCorrectAnswers, setShowCorrectAnswers] = useState<boolean>(false);
   const [showIncorrectAnswers, setShowIncorrectAnswers] = useState<boolean>(false);
+  const [showAllAnswers, setShowAllAnswers] = useState<boolean>(false);
 
   const categoryData: { [key: string]: QuestionType[] } = {
     language: languageData,
@@ -195,16 +198,50 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const handleShare = async () => {
+    const correctQuestions = questions
+      .map((question, index) => ({ ...question, index: index + 1 }))
+      .filter((question) => selectedAnswers[question.id] === question.answer);
+    const incorrectQuestions = questions
+      .map((question, index) => ({ ...question, index: index + 1 }))
+      .filter((question) => selectedAnswers[question.id] !== question.answer);
+
+    const message = `${t('results')}\n${t('correct_count')}: ${correctCount}\n${t('incorrect_count')}: ${incorrectCount}\n${
+      mode === 'exam' ? `${t('verdict')}: ${pass === 'excellent' ? t('excellent') : pass === 'pass' ? t('pass') : t('fail')}` : ''
+    }\n\n${mode === 'exam' ? `${t('correct_answers')}\n${correctQuestions
+      .map((question) => `${question.index}. ${question.question} - ${t('your_answer')}: ${selectedAnswers[question.id]}, ${t('correct_answer')}: ${question.answer}`)
+      .join('\n')}\n\n${t('incorrect_answers')}\n${incorrectQuestions
+      .map((question) => `${question.index}. ${question.question} - ${t('your_answer')}: ${selectedAnswers[question.id]}, ${t('correct_answer')}: ${question.answer}`)
+      .join('\n')}\n\n` : ''}TotaTests - ${t('app_link')}`;
+    try {
+      await Share.share({
+        message,
+      });
+    } catch (error) {
+      console.log('Error sharing:', error);
+    }
+  };
+
   const toggleHints = () => {
     setShowHints(!showHints);
   };
 
   const toggleShowCorrectAnswers = () => {
-    setShowCorrectAnswers(!showCorrectAnswers);
+    setShowCorrectAnswers(true);
+    setShowIncorrectAnswers(false);
+    setShowAllAnswers(false);
   };
 
   const toggleShowIncorrectAnswers = () => {
-    setShowIncorrectAnswers(!showIncorrectAnswers);
+    setShowCorrectAnswers(false);
+    setShowIncorrectAnswers(true);
+    setShowAllAnswers(false);
+  };
+
+  const toggleShowAllAnswers = () => {
+    setShowCorrectAnswers(false);
+    setShowIncorrectAnswers(false);
+    setShowAllAnswers(true);
   };
 
   const handleCategoryChange = (category: string) => {
@@ -223,13 +260,20 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
   };
 
   const handleQuestionSetChange = (set: string) => {
-    setQuestionSets((prev) =>
-      prev.includes(set) ? prev.filter((s) => s !== set) : [...prev, set]
-    );
+    setQuestionSets((prev) => (prev.includes(set) ? prev.filter((s) => s !== set) : [...prev, set]));
   };
 
   return (
     <StyledSafeAreaView className="flex-1 bg-white">
+      <StyledView className="flex-row justify-between items-center p-4 border-b-2 border-gray-200">
+        <StyledView className="flex-row items-center">
+          <StyledImage source={require('../assets/images/icon.png')} className="w-10 h-10 mr-2" />
+          <StyledText className="text-4xl font-bold">TotaTests</StyledText>
+        </StyledView>
+        <StyledTouchableOpacity onPress={handleHome} className="p-2 border-2 border-red-500">
+          <StyledText>{t('home')}</StyledText>
+        </StyledTouchableOpacity>
+      </StyledView>
       <StyledScrollView contentContainerStyle={{ flexGrow: 1 }} className="p-4">
         {!questions.length ? (
           <StyledView>
@@ -282,7 +326,7 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
                       value={numQuestions}
                       onChangeText={setNumQuestions}
                       keyboardType="numeric"
-                      className="border-2 border-black p-2 mb-4"
+                      className="border-2 border-red-500 p-2 mb-4"
                       placeholder={String(selectedCategories.length * 200)}
                     />
                   </StyledView>
@@ -322,11 +366,11 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
         ) : showResults ? (
           <StyledView>
             <StyledView className="mb-4">
-              <StyledText className="text-3xl">{t('results')}</StyledText>
-              <StyledText>{t('correct_count')}: {correctCount}</StyledText>
-              <StyledText>{t('incorrect_count')}: {incorrectCount}</StyledText>
+              <StyledText className="text-4xl font-bold mb-4">{t('results')}</StyledText>
+              <StyledText className="text-2xl mb-2">{t('correct_count')}: {correctCount}</StyledText>
+              <StyledText className="text-2xl mb-2">{t('incorrect_count')}: {incorrectCount}</StyledText>
               {mode === 'exam' && (
-                <StyledText>{t('verdict')}: {pass === 'excellent' ? t('excellent') : pass === 'pass' ? t('pass') : t('fail')}</StyledText>
+                <StyledText className="text-2xl mb-2">{t('verdict')}: {pass === 'excellent' ? t('excellent') : pass === 'pass' ? t('pass') : t('fail')}</StyledText>
               )}
             </StyledView>
             <StyledScrollView className="mb-4">
@@ -340,26 +384,42 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
               </StyledView>
             </StyledScrollView>
             <StyledView className="mb-4">
-              <StyledTouchableOpacity onPress={toggleShowCorrectAnswers} className="p-2 border-2 border-red-500 mb-2">
+              <StyledTouchableOpacity onPress={toggleShowCorrectAnswers} className={`p-2 border-2 border-red-500 mb-2 ${showCorrectAnswers ? 'bg-red-200' : ''}`}>
                 <StyledText>{t('show_correct_answers')}</StyledText>
               </StyledTouchableOpacity>
-              <StyledTouchableOpacity onPress={toggleShowIncorrectAnswers} className="p-2 border-2 border-red-500">
+              <StyledTouchableOpacity onPress={toggleShowIncorrectAnswers} className={`p-2 border-2 border-red-500 mb-2 ${showIncorrectAnswers ? 'bg-red-200' : ''}`}>
                 <StyledText>{t('show_incorrect_answers')}</StyledText>
+              </StyledTouchableOpacity>
+              <StyledTouchableOpacity onPress={toggleShowAllAnswers} className={`p-2 border-2 border-red-500 ${showAllAnswers ? 'bg-red-200' : ''}`}>
+                <StyledText>{t('show_all_answers')}</StyledText>
               </StyledTouchableOpacity>
             </StyledView>
             <StyledScrollView className="mb-4">
-              {showCorrectAnswers && questions.filter((question) => selectedAnswers[question.id] === question.answer).map((question) => (
+              {showCorrectAnswers && questions
+                .map((question, index) => ({ ...question, index: index + 1 }))
+                .filter((question) => selectedAnswers[question.id] === question.answer)
+                .map((question) => (
+                  <StyledView key={question.id} className="mb-4">
+                    <StyledText className="text-xl font-bold mb-2">{question.index}. {question.question}</StyledText>
+                    <StyledText className="text-lg mb-2">{t('your_answer')}: {selectedAnswers[question.id]}</StyledText>
+                    <StyledText className="text-lg mb-2">{t('correct_answer')}: {question.answer}</StyledText>
+                  </StyledView>
+                ))}
+              {showIncorrectAnswers && questions
+                .map((question, index) => ({ ...question, index: index + 1 }))
+                .filter((question) => selectedAnswers[question.id] !== question.answer)
+                .map((question) => (
+                  <StyledView key={question.id} className="mb-4">
+                    <StyledText className="text-xl font-bold mb-2">{question.index}. {question.question}</StyledText>
+                    <StyledText className="text-lg mb-2">{t('your_answer')}: {selectedAnswers[question.id]}</StyledText>
+                    <StyledText className="text-lg mb-2">{t('correct_answer')}: {question.answer}</StyledText>
+                  </StyledView>
+                ))}
+              {showAllAnswers && questions.map((question, index) => (
                 <StyledView key={question.id} className="mb-4">
-                  <StyledText>{question.question}</StyledText>
-                  <StyledText>{t('your_answer')}: {selectedAnswers[question.id]}</StyledText>
-                  <StyledText>{t('correct_answer')}: {question.answer}</StyledText>
-                </StyledView>
-              ))}
-              {showIncorrectAnswers && questions.filter((question) => selectedAnswers[question.id] !== question.answer).map((question) => (
-                <StyledView key={question.id} className="mb-4">
-                  <StyledText>{question.question}</StyledText>
-                  <StyledText>{t('your_answer')}: {selectedAnswers[question.id]}</StyledText>
-                  <StyledText>{t('correct_answer')}: {question.answer}</StyledText>
+                  <StyledText className="text-xl font-bold mb-2">{index + 1}. {question.question}</StyledText>
+                  <StyledText className="text-lg mb-2">{t('your_answer')}: {selectedAnswers[question.id]}</StyledText>
+                  <StyledText className="text-lg mb-2">{t('correct_answer')}: {question.answer}</StyledText>
                 </StyledView>
               ))}
             </StyledScrollView>
@@ -413,8 +473,8 @@ export default function TestScreen({ onBack }: { onBack: () => void }) {
           <StyledTouchableOpacity onPress={handleRestart} className="p-2 border-2 border-red-500">
             <StyledText>{t('restart')}</StyledText>
           </StyledTouchableOpacity>
-          <StyledTouchableOpacity onPress={handleHome} className="p-2 border-2 border-red-500">
-            <StyledText>{t('home')}</StyledText>
+          <StyledTouchableOpacity onPress={handleShare} className="p-2 border-2 border-red-500">
+            <StyledText>{t('share')}</StyledText>
           </StyledTouchableOpacity>
         </StyledView>
       )}
